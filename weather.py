@@ -7,8 +7,6 @@ class HeFengWeather:
         self.location = "101020600"
         self.client = httpx.Client()
 
-    import datetime
-
     def convert_time(time_str):
         dt = datetime.datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%S")
         if dt.year != datetime.datetime.now().year:
@@ -97,13 +95,20 @@ class HeFengWeather:
                 severityColor = severityColor.replace(i, j)
 
             res = f'''天气灾害预警
-            {typeName}{severityColor}预警
+{typeName}{severityColor}预警
 
-            {sender}
-            {pubTime}
-            {title}
-            {text}
-            
-            预警状态
-            持续时间  {startTime} -> {endTime}
+{sender}
+{pubTime}
+{title}
+{text}
+
+预警状态
+持续时间  {startTime} -> {endTime}
             '''
+
+            return res
+
+    def airaqi(self, day, location=None):
+        if location is None:
+            location = self.location
+        data
