@@ -7,7 +7,7 @@ class HeFengWeather:
         self.location = "101020600"
         self.client = httpx.Client()
 
-    def convert_time(time_str):
+    def convert_time(self, time_str):
         dt = datetime.datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%S")
         if dt.year != datetime.datetime.now().year:
             return dt.strftime("%Y年%m月%d日 %H:%M时")
@@ -81,9 +81,10 @@ class HeFengWeather:
             typeName = data["warning"]["typeName"]
             text = data["warning"]["text"]
 
-            pubtime = self.convert_time(pubTime)
-            starttime = self.convert_time(startTime)
-            endtime = self.convert_time(endTime)
+            # 避免变量名冲突
+            readable_pubtime = self.convert_time(pubTime)
+            readable_starttime = self.convert_time(startTime)
+            readable_endtime = self.convert_time(endTime)
 
             colour_dict = {
                 "Blue": "蓝色",
@@ -95,20 +96,49 @@ class HeFengWeather:
                 severityColor = severityColor.replace(i, j)
 
             res = f'''天气灾害预警
-{typeName}{severityColor}预警
+            {typeName}{severityColor}预警
 
-{sender}
-{pubTime}
-{title}
-{text}
-
-预警状态
-持续时间  {startTime} -> {endTime}
+            {sender}
+            {pubTime}
+            {title}
+            {text}
+            
+            预警状态
+            持续时间  {readable_starttime} -> {readable_endtime}
             '''
 
             return res
-
-    def airaqi(self, day, location=None):
+        
+    def airaqi(self, location=None):
         if location is None:
             location = self.location
-        data
+        response = self.client.get(f"https://api.qweather.com/v7/air/now?location={location}&key={self.key}")
+        data = response.json()
+
+        # 检查是否存在'now'键，如果不存在则返回错误信息
+        if 'now' in data:
+            aqi = data["now"]["aqi"]
+            level = data["now"]["level"]
+            category = data["now"]["category"]
+            primary = data["now"]["primary"]
+            pm10 = data["now"]["pm10"]
+            pm2p5 = data["now"]["pm2p5"]
+            no2 = data["now"]["no2"]
+            so2 = data["now"]["so2"]
+            co = data["now"]["co"]
+            o3 = data["now"]["o3"]
+
+            res = f'''实时空气质量
+    AQI指数: {aqi}, 等级: {level}, 类别: {category}
+    主要污染物: {primary}
+    PM10: {pm10}, PM2.5: {pm2p5}
+    NO2: {no2}, SO2: {so2}, CO: {co}, O3: {o3}
+            '''
+        else:
+            # 如果API响应中没有'now'，可能是请求错误或该位置没有数据
+            res = "请求错误或该位置没有空气质量数据。"
+        
+        return res
+# 示例调用
+weather = HeFengWeather()
+air_quality_info = weather.airaqi(location='101020600')
